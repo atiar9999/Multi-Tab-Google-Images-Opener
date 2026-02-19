@@ -1,3 +1,4 @@
+https://atiar9999.github.io/Multi-Tab-Google-Images-Opener/
 # 🚀 Multi‑Tab Google Images Opener
 
 A lightweight, client-side tool that opens multiple Google Images searches at once from a list of words. It saves time and reduces the risk of triggering Google's CAPTCHA by spacing out tab openings.
