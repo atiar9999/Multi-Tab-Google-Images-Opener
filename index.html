@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word to Google Images · CAPTCHA‑aware opener</title>
+    <style>
+        /* ============================================
+           modern-ui-v3.css — Balanced, warm, production-ready
+           A refined design system with solid surfaces, warm neutrals, 
+           subtle depth, and thoughtful interactions.
+           Perfect for dashboards, admin panels, and content apps.
+           ============================================ */
+
+        /* ---------- Design tokens (light mode) ---------- */
+        :root {
+          /* Color palette — warm neutrals with a soft teal accent */
+          --bg-subtle: #f9f7f5;
+          --bg-surface: #ffffff;
+          --bg-muted: #f2efea;
+          --border-subtle: #e6dfd7;
+          --border-default: #cdc6bc;
+          --text-title: #2c2a27;
+          --text-body: #4e4b47;
+          --text-muted: #7f7a73;
+          --accent-primary: #2c7a6e;
+          --accent-soft: #3f9486;
+          --accent-subtle: #e1f0ed;
+          --accent-lighter: #f0f8f6;
+          --success: #2f7d4f;
+          --success-bg: #e5f3e9;
+          --warning: #b55f2a;
+          --warning-bg: #feefe2;
+          --error: #c24b3a;
+          --error-bg: #fce9e4;
+
+          /* Typography */
+          --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+          --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace;
+          --font-weight-regular: 400;
+          --font-weight-medium: 500;
+          --font-weight-semibold: 600;
+          --line-height-tight: 1.2;
+          --line-height-base: 1.5;
+          --line-height-relaxed: 1.7;
+
+          /* Spacing (4px base) */
+          --space-1: 0.25rem;
+          --space-2: 0.5rem;
+          --space-3: 0.75rem;
+          --space-4: 1rem;
+          --space-5: 1.25rem;
+          --space-6: 1.5rem;
+          --space-8: 2rem;
+          --space-10: 2.5rem;
+          --space-12: 3rem;
+
+          /* Border radius */
+          --radius-sm: 6px;
+          --radius-md: 10px;
+          --radius-lg: 16px;
+          --radius-xl: 24px;
+          --radius-full: 9999px;
+
+          /* Shadows — soft, warm */
+          --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.05);
+          --shadow-sm: 0 4px 6px -2px rgba(0, 0, 0, 0.04), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+          --shadow-md: 0 10px 15px -5px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+          --shadow-lg: 0 20px 25px -8px rgba(0, 0, 0, 0.06), 0 8px 10px -4px rgba(0, 0, 0, 0.02);
+          --shadow-xl: 0 30px 35px -10px rgba(0, 0, 0, 0.08);
+
+          /* Transitions */
+          --transition-quick: 120ms ease;
+          --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+          --transition-bounce: 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* ---------- Dark mode (automatic) ---------- */
+        @media (prefers-color-scheme: dark) {
+          :root {
+            --bg-subtle: #1b1b1b;
+            --bg-surface: #242424;
+            --bg-muted: #2c2c2c;
+            --border-subtle: #3a3a3a;
+            --border-default: #4f4f4f;
+            --text-title: #ededed;
+            --text-body: #bdbdbd;
+            --text-muted: #8f8f8f;
+            --accent-primary: #5fa89c;
+            --accent-soft: #7fc0b4;
+            --accent-subtle: #2d4a44;
+            --accent-lighter: #1f3530;
+            --success: #6fcf97;
+            --success-bg: #1e3b2b;
+            --warning: #f2a65a;
+            --warning-bg: #3f2e1c;
+            --error: #f2856d;
+            --error-bg: #442b24;
+          }
+        }
+
+        /* ---------- Reset ---------- */
+        *,
+        *::before,
+        *::after {
+          box-sizing: border-box;
+          margin: 0;
+          padding: 0;
+        }
+
+        html {
+          font-size: 16px;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+          font-family: var(--font-sans);
+          font-weight: var(--font-weight-regular);
+          line-height: var(--line-height-base);
+          color: var(--text-body);
+          background-color: var(--bg-subtle);
+          padding: 2rem 1rem;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-height: 100vh;
+        }
+
+        /* ---------- Typography ---------- */
+        h1, h2, h3, h4, h5, h6 {
+          font-weight: var(--font-weight-semibold);
+          line-height: var(--line-height-tight);
+          color: var(--text-title);
+          margin-bottom: var(--space-3);
+        }
+
+        h1 { font-size: 2.5rem; letter-spacing: -0.02em; }
+        h2 { font-size: 2rem; letter-spacing: -0.01em; }
+        h3 { font-size: 1.5rem; }
+        h4 { font-size: 1.25rem; }
+        h5 { font-size: 1.125rem; }
+        h6 { font-size: 1rem; }
+
+        p {
+          color: var(--text-body);
+          margin-bottom: var(--space-4);
+        }
+
+        a {
+          color: var(--accent-primary);
+          text-decoration: none;
+          font-weight: var(--font-weight-medium);
+          transition: color var(--transition-quick);
+        }
+        a:hover {
+          color: var(--accent-soft);
+          text-decoration: underline;
+        }
+
+        code, pre, .mono {
+          font-family: var(--font-mono);
+          font-size: 0.9em;
+          background-color: var(--bg-muted);
+          border: 1px solid var(--border-subtle);
+          padding: 0.2em 0.4em;
+          border-radius: var(--radius-sm);
+        }
+
+        /* ---------- Cards ---------- */
+        .card {
+          background-color: var(--bg-surface);
+          border-radius: var(--radius-lg);
+          border: 1px solid var(--border-subtle);
+          padding: var(--space-6);
+          box-shadow: var(--shadow-xs);
+          transition: box-shadow var(--transition-base), transform var(--transition-base);
+          max-width: 800px;
+          width: 100%;
+          margin: 0 auto;
+        }
+        .card:hover {
+          box-shadow: var(--shadow-md);
+        }
+
+        /* ---------- Buttons ---------- */
+        .btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: var(--space-2);
+          border: 1px solid transparent;
+          border-radius: var(--radius-md);
+          font-weight: var(--font-weight-medium);
+          font-size: 0.95rem;
+          padding: 0.6rem 1.25rem;
+          cursor: pointer;
+          transition: background-color var(--transition-quick), border-color var(--transition-quick), box-shadow var(--transition-quick), transform var(--transition-quick);
+          white-space: nowrap;
+          line-height: 1;
+          text-decoration: none;
+        }
+        .btn:active {
+          transform: translateY(1px);
+        }
+
+        .btn-primary {
+          background-color: var(--accent-primary);
+          color: white;
+          border-color: var(--accent-primary);
+        }
+        .btn-primary:hover {
+          background-color: var(--accent-soft);
+          border-color: var(--accent-soft);
+          box-shadow: var(--shadow-sm);
+        }
+
+        /* ---------- Form elements ---------- */
+        .textarea-label {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: var(--space-2);
+          font-weight: var(--font-weight-medium);
+          color: var(--text-title);
+        }
+
+        .badge {
+          display: inline-block;
+          background-color: var(--accent-lighter);
+          color: var(--accent-primary);
+          font-weight: var(--font-weight-medium);
+          font-size: 0.75rem;
+          padding: 0.2rem 0.8rem;
+          border-radius: var(--radius-full);
+          border: 1px solid var(--accent-subtle);
+          line-height: 1.4;
+          white-space: nowrap;
+        }
+
+        .textarea {
+          width: 100%;
+          font-family: var(--font-sans);
+          font-size: 1rem;
+          padding: 0.6rem 0.9rem;
+          border: 1px solid var(--border-default);
+          border-radius: var(--radius-md);
+          background-color: var(--bg-surface);
+          color: var(--text-body);
+          transition: border-color var(--transition-quick), box-shadow var(--transition-quick);
+          resize: vertical;
+          min-height: 200px;
+          margin-bottom: var(--space-4);
+        }
+        .textarea:focus {
+          outline: none;
+          border-color: var(--accent-primary);
+          box-shadow: 0 0 0 3px var(--accent-subtle);
+        }
+
+        /* ---------- Custom components for this tool ---------- */
+        .sub {
+          color: var(--text-muted);
+          margin-bottom: var(--space-5);
+          font-size: 1rem;
+        }
+
+        .captcha-note {
+          background-color: var(--warning-bg);
+          border-left: 4px solid var(--warning);
+          padding: var(--space-4);
+          border-radius: var(--radius-md);
+          margin: var(--space-4) 0;
+          font-size: 0.9rem;
+          color: var(--text-body);
+        }
+        .captcha-note .emph {
+          font-weight: var(--font-weight-semibold);
+          color: var(--warning);
+          display: block;
+          margin-bottom: var(--space-2);
+        }
+
+        .delay-option {
+          display: flex;
+          align-items: center;
+          gap: var(--space-4);
+          flex-wrap: wrap;
+          margin: var(--space-5) 0;
+          padding: var(--space-3) var(--space-4);
+          background-color: var(--bg-muted);
+          border-radius: var(--radius-md);
+        }
+        .delay-option label {
+          display: flex;
+          align-items: center;
+          gap: var(--space-2);
+          cursor: pointer;
+          color: var(--text-title);
+        }
+        .delay-option select {
+          padding: 0.4rem 2rem 0.4rem 0.8rem;
+          border-radius: var(--radius-md);
+          border: 1px solid var(--border-default);
+          background-color: var(--bg-surface);
+          font-family: var(--font-sans);
+          font-size: 0.9rem;
+          cursor: pointer;
+          appearance: none;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235e5b57' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+          background-repeat: no-repeat;
+          background-position: right 0.5rem center;
+          background-size: 1rem;
+        }
+
+        .actions {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: var(--space-4);
+          margin: var(--space-6) 0 var(--space-4);
+        }
+
+        .info-hint {
+          display: flex;
+          gap: var(--space-3);
+          color: var(--text-muted);
+          font-size: 0.85rem;
+        }
+        .icon-tab {
+          background-color: var(--bg-muted);
+          padding: 0.2rem 0.7rem;
+          border-radius: var(--radius-full);
+        }
+
+        .warning {
+          background-color: var(--error-bg);
+          color: var(--error);
+          padding: var(--space-3) var(--space-4);
+          border-radius: var(--radius-md);
+          font-size: 0.9rem;
+          margin: var(--space-4) 0;
+          border-left: 4px solid var(--error);
+        }
+
+        .footer-note {
+          margin-top: var(--space-5);
+          padding-top: var(--space-4);
+          border-top: 1px solid var(--border-subtle);
+          font-size: 0.8rem;
+          color: var(--text-muted);
+          text-align: center;
+        }
+        .footer-note code {
+          background-color: var(--bg-muted);
+          padding: 0.2rem 0.4rem;
+          border-radius: var(--radius-sm);
+        }
+
+        /* Checkbox styling */
+        .delay-option input[type="checkbox"] {
+          appearance: none;
+          width: 1.125rem;
+          height: 1.125rem;
+          border: 2px solid var(--border-default);
+          border-radius: var(--radius-sm);
+          background-color: var(--bg-surface);
+          transition: all var(--transition-quick);
+          cursor: pointer;
+          position: relative;
+        }
+        .delay-option input[type="checkbox"]:checked {
+          background-color: var(--accent-primary);
+          border-color: var(--accent-primary);
+        }
+        .delay-option input[type="checkbox"]:checked::after {
+          content: "✓";
+          color: white;
+          font-size: 0.85rem;
+          position: absolute;
+          top: 45%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+        }
+        .delay-option input[type="checkbox"]:focus-visible {
+          outline: 2px solid var(--accent-primary);
+          outline-offset: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>
+            🔎 Image tab flood
+            <span>avoid CAPTCHA</span>
+        </h1>
+        <div class="sub">
+            Type one word per line · each word becomes a Google Images search in its own tab.
+        </div>
+
+        <div class="textarea-label">
+            <span>📋 Your word list</span>
+            <span class="badge" id="wordCountDisplay">0 words</span>
+        </div>
+        <textarea id="wordList" rows="7" placeholder="e.g.&#10;sunset&#10;mountains&#10;minimalist wallpaper&#10;coffee art&#10;neon sign&#10;... up to 30-ish" autofocus class="textarea">sunset
+mountains
+minimalist wallpaper
+coffee art
+neon sign
+aurora borealis
+ferrari
+waterfall
+javascript logo
+pixel art
+honeycomb
+abstract 3d
+vintage camera
+macaw
+stone texture
+bread
+ocean waves
+typography
+moon surface
+orchid
+cherry blossoms
+dragon sketch
+glass sculpture
+horizon
+clouds
+otter
+compass
+sushi
+fireworks
+stone bridge</textarea>
+
+        <!-- CAPTCHA warning and delay controls -->
+        <div class="captcha-note">
+            <span class="emph">⚠️ GOOGLE CAPTCHA</span>
+            <span>Opening many tabs quickly may trigger a CAPTCHA. Use the delay option below to slow down the openings – but note that delays can cause pop‑up blockers to block some tabs.</span>
+        </div>
+
+        <div class="delay-option">
+            <label>
+                <input type="checkbox" id="enableDelayCheckbox" checked> 
+                <span>🌊 Add delay between tabs (helps avoid CAPTCHA)</span>
+            </label>
+            <select id="delaySelect">
+                <option value="300">0.3 sec</option>
+                <option value="500" selected>0.5 sec</option>
+                <option value="800">0.8 sec</option>
+                <option value="1200">1.2 sec</option>
+                <option value="2000">2 sec</option>
+            </select>
+        </div>
+
+        <div class="actions">
+            <button class="btn btn-primary" id="openTabsBtn">
+                <span style="font-size:1.4rem;">🚀</span> Open all in Google Images
+            </button>
+            <div class="info-hint">
+                <span class="icon-tab">🔽 up to 30 tabs</span>
+                <span>one tab per line</span>
+            </div>
+        </div>
+
+        <div class="warning" id="popupWarning">
+            ⚠️ <strong>Allow pop-ups</strong> for this site. If tabs are blocked, click the pop-up icon in your address bar.
+        </div>
+
+        <div class="footer-note">
+            ⚡ opens <code>https://www.google.com/search?q=...&tbm=isch</code> · words are URL-encoded
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const textarea = document.getElementById('wordList');
+            const openBtn = document.getElementById('openTabsBtn');
+            const wordCountSpan = document.getElementById('wordCountDisplay');
+            const enableDelayCheckbox = document.getElementById('enableDelayCheckbox');
+            const delaySelect = document.getElementById('delaySelect');
+
+            function updateWordCount() {
+                const raw = textarea.value;
+                const lines = raw.split(/\n/);
+                const nonEmpty = lines.filter(line => line.trim() !== '');
+                wordCountSpan.textContent = nonEmpty.length + ' word' + (nonEmpty.length !== 1 ? 's' : '');
+                return nonEmpty;
+            }
+
+            textarea.addEventListener('input', updateWordCount);
+            updateWordCount();
+
+            openBtn.addEventListener('click', function() {
+                const raw = textarea.value;
+                const words = raw.split(/\n/)
+                                 .map(line => line.trim())
+                                 .filter(word => word !== '');
+
+                if (words.length === 0) {
+                    alert('❗ Please enter at least one word.');
+                    return;
+                }
+
+                if (words.length > 40) {
+                    if (!confirm(`⚠️ You have ${words.length} words. That's a lot of tabs – your browser might slow down. Continue?`)) {
+                        return;
+                    }
+                }
+
+                const base = 'https://www.google.com/search?tbm=isch&q=';
+
+                // Decide whether to use delay
+                if (enableDelayCheckbox.checked) {
+                    const delayMs = parseInt(delaySelect.value, 10);
+                    // Open first tab immediately to keep popup association, then schedule the rest
+                    for (let i = 0; i < words.length; i++) {
+                        const word = words[i];
+                        const url = base + encodeURIComponent(word);
+                        if (i === 0) {
+                            window.open(url, '_blank');
+                        } else {
+                            setTimeout(() => {
+                                window.open(url, '_blank');
+                            }, i * delayMs);
+                        }
+                    }
+                } else {
+                    // Open all synchronously
+                    for (let word of words) {
+                        const url = base + encodeURIComponent(word);
+                        window.open(url, '_blank');
+                    }
+                }
+
+                textarea.focus();
+            });
+        })();
+    </script>
+</body>
+</html>
